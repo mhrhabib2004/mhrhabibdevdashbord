@@ -1,203 +1,281 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Controller, useForm } from "react-hook-form";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
-// ... rest of your code
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+
+import { addProjects } from "@/service/project";
 
 interface ProjectFormData {
   title: string;
   descriptions: string;
   liveLink: string;
-  image?: string;
+  image: string;
   githubClient?: string;
   githubServer?: string;
-  techStack?: string[];
-  features?: string[];
+  techStack?: string;
+  features?: string;
   category?: string;
   isTeamProject?: boolean;
-  contributors?: string[];
+  contributors?: string;
   videoDemo?: string;
 }
 
-export default function AddProjects() {
-  const { register, handleSubmit, formState: { errors },control} = useForm<ProjectFormData>();
+export const AddProject = () => {
+  const [open, setOpen] = useState(false);
 
-  const onSubmit = (data: ProjectFormData) => {
-    console.log(data);
-    // Handle form submission here
+  const form = useForm<ProjectFormData>({
+    defaultValues: {
+      isTeamProject: false,
+    },
+  });
+
+  const onSubmit = async (data: ProjectFormData) => {
+    try {
+      await addProjects(data);
+      toast.success("Project added successfully!");
+      form.reset();
+      setOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add project");
+    }
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div className="flex justify-end mr-8">
-          <Button variant={"ghost"}>Add Projects</Button>
-        </div>
-      </DialogTrigger>
-      <DialogContent className="max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add Projects</DialogTitle>
-          <DialogDescription>
-            Please fill out the details of your Projects.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Button onClick={() => setOpen(true)}>Add Project</Button>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
-          {/* Title */}
-          <div>
-            <Label htmlFor="title">Project Title*</Label>
-            <Input
-              id="title"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("title", { required: "Title is required" })}
-            />
-            {errors.title && (
-              <p className="text-red-500 text-sm">{errors.title.message}</p>
-            )}
-          </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-screen overflow-y-auto max-w-2xl">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              
+              {/* Title */}
+              <FormField
+                control={form.control}
+                name="title"
+                rules={{ required: "Title is required" }}
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>Project Title*</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Project title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Description */}
-          <div>
-            <Label htmlFor="descriptions">Description*</Label>
-            <Textarea
-              id="descriptions"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("descriptions", { required: "Description is required" })}
-            />
-            {errors.descriptions && (
-              <p className="text-red-500 text-sm">{errors.descriptions.message}</p>
-            )}
-          </div>
+              {/* Live Link */}
+              <FormField
+                control={form.control}
+                name="liveLink"
+                rules={{
+                  required: "Live link is required",
+                  pattern: {
+                    value: /^https?:\/\/.+/,
+                    message: "Enter a valid URL",
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Live Link*</FormLabel>
+                    <FormControl>
+                      <Input type="url" placeholder="https://example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Live Link */}
-          <div>
-            <Label htmlFor="liveLink">Live Link*</Label>
-            <Input
-              id="liveLink"
-              type="url"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("liveLink", { required: "Live link is required" })}
-            />
-            {errors.liveLink && (
-              <p className="text-red-500 text-sm">{errors.liveLink.message}</p>
-            )}
-          </div>
+              {/* Image URL */}
+              <FormField
+                control={form.control}
+                name="image"
+                rules={{
+                  required: "Image URL is required",
+                  pattern: {
+                    value: /^https?:\/\/.+/,
+                    message: "Enter a valid URL",
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image URL*</FormLabel>
+                    <FormControl>
+                      <Input type="url" placeholder="https://example.com/image.jpg" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Provide a direct image URL, no upload needed.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Image URL */}
-          <div>
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              type="url"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("image")}
-            />
-          </div>
+              {/* Descriptions */}
+              <FormField
+                control={form.control}
+                name="descriptions"
+                rules={{ required: "Descriptions is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descriptions*</FormLabel>
+                    <FormControl>
+                      <Textarea rows={4} placeholder="Project descriptions" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* GitHub Client */}
-          <div>
-            <Label htmlFor="githubClient">GitHub Client Link</Label>
-            <Input
-              id="githubClient"
-              type="url"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("githubClient")}
-            />
-          </div>
+              {/* GitHub Client */}
+              <FormField
+                control={form.control}
+                name="githubClient"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>GitHub Client Link</FormLabel>
+                    <FormControl>
+                      <Input type="url" placeholder="https://github.com/..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* GitHub Server */}
-          <div>
-            <Label htmlFor="githubServer">GitHub Server Link</Label>
-            <Input
-              id="githubServer"
-              type="url"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("githubServer")}
-            />
-          </div>
+              {/* GitHub Server */}
+              <FormField
+                control={form.control}
+                name="githubServer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>GitHub Server Link</FormLabel>
+                    <FormControl>
+                      <Input type="url" placeholder="https://github.com/..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Tech Stack */}
-          <div>
-            <Label htmlFor="techStack">Tech Stack (comma separated)</Label>
-            <Input
-              id="techStack"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("techStack")}
-              placeholder="React, Node.js, MongoDB"
-            />
-          </div>
+              {/* Tech Stack */}
+              <FormField
+                control={form.control}
+                name="techStack"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tech Stack</FormLabel>
+                    <FormControl>
+                      <Input placeholder="React, Node.js, MongoDB" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Features */}
-          <div>
-            <Label htmlFor="features">Features (comma separated)</Label>
-            <Textarea
-              id="features"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("features")}
-              placeholder="User authentication, CRUD operations, Responsive design"
-            />
-          </div>
+              {/* Features */}
+              <FormField
+                control={form.control}
+                name="features"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Features</FormLabel>
+                    <FormControl>
+                      <Textarea rows={3} placeholder="Key features..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Category */}
-          <div>
-        <Controller
-  name="category"
-  control={control}
-  render={({ field }) => (
-    <Select onValueChange={field.onChange} defaultValue={field.value}>
-      <SelectTrigger className="bg-white mt-2 dark:bg-zinc-800">
-        <SelectValue placeholder="Select a category" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="web">Web Application</SelectItem>
-        <SelectItem value="mobile">Mobile Application</SelectItem>
-        <SelectItem value="desktop">Desktop Application</SelectItem>
-      </SelectContent>
-    </Select>
-  )}
-/>
-          </div>
+              {/* Category */}
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="E-commerce, Blog, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Is Team Project */}
-          <div className="flex items-center space-x-2">
-            <Checkbox id="isTeamProject" {...register("isTeamProject")} />
-            <Label htmlFor="isTeamProject">Team Project</Label>
-          </div>
+              {/* Video Demo */}
+              <FormField
+                control={form.control}
+                name="videoDemo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Video Demo Link</FormLabel>
+                    <FormControl>
+                      <Input type="url" placeholder="https://..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Contributors */}
-          <div>
-            <Label htmlFor="contributors">Contributors (comma separated)</Label>
-            <Input
-              id="contributors"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("contributors")}
-              placeholder="John Doe, Jane Smith"
-            />
-          </div>
+              {/* Team Project Switch */}
+              <FormField
+                control={form.control}
+                name="isTeamProject"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
+                    <FormLabel className="mb-0">Team Project?</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-          {/* Video Demo */}
-          <div>
-            <Label htmlFor="videoDemo">Video Demo URL</Label>
-            <Input
-              id="videoDemo"
-              type="url"
-              className="bg-white mt-2 dark:bg-zinc-800"
-              {...register("videoDemo")}
-            />
-          </div>
+              {/* Contributors */}
+              <FormField
+                control={form.control}
+                name="contributors"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contributors (comma-separated)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John, Jane, Alex" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <DialogFooter>
-            <Button type="submit">Add Project</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              {/* Submit */}
+              <Button type="submit" className="w-full">
+                Submit
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
-}
+};
