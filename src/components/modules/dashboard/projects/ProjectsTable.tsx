@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import Image from "next/image";
@@ -11,82 +12,119 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import UpdateProjects from "./UpdateProjects";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Project } from "@/type/project";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
-const projects = [
-  {
-  "title": "MediCare - Online Medicine Store",
-  "descriptions": "MediCare is a multi-vendor e-commerce platform where users can easily order medicines online. It's a fully featured project including user, vendor, and admin dashboards.",
-  "liveLink": "https://medicare.vercel.app",
-  "image": "/images/projects/medicare.png",
-  "githubClient": "https://github.com/mhrhabib2004/medicare-client",
-  "githubServer": "https://github.com/mhrhabib2004/medicare-server",
-  "techStack": [
-    "React",
-    "Tailwind CSS",
-    "Node.js",
-    "Express",
-    "MongoDB",
-    "JWT",
-    "Redux Toolkit",
-    "Stripe"
-  ],
-  "features": [
-    "User authentication with JWT",
-    "Product filtering and search",
-    "Add to cart and order management",
-    "Stripe payment integration",
-    "Multi-vendor support",
-    "Dashboard and role-based access"
-  ],
-  "createdAt": "2024-06-01T10:30:00Z",
-  "updatedAt": "2024-07-15T15:45:00Z",
-  "category": "E-Commerce",
-  "isTeamProject": true,
-  "contributors": [
-    "Md. Habibur Rahman Habib",
-    "Samiul Haque",
-    "Jannat Ara"
-  ],
-  "videoDemo": "https://www.youtube.com/watch?v=your-demo-link"
+interface ProjectsTableProps {
+  projects: Project[];
+  onUpdate: (data: Project) => Promise<{success: boolean; message: string}>;
+  onDelete: (id: string) => Promise<{success: boolean; message: string}>;
 }
 
-];
+export default function ProjectsTable({ projects, onUpdate, onDelete }: ProjectsTableProps) {
+  const handleUpdate = async (data: Project) => {
+    try {
+      const result = await onUpdate(data);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
+  };
 
-export default function ProjectsTable() {
+  const handleDelete = async (id: string) => {
+    try {
+      const result = await onDelete(id);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>title</TableHead>
-          <TableHead>liveLink</TableHead>
-          <TableHead>image</TableHead>
-          <TableHead className="text-right">Action</TableHead>
+          <TableHead>Title</TableHead>
+          <TableHead>Live Link</TableHead>
+          <TableHead>Image</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {projects && projects.length > 0 ? (
-          projects.map((projects, index) => (
-            <TableRow key={index}>
-              <TableCell className="font-medium">{projects?.title}</TableCell>
-              <TableCell>{projects?.liveLink}</TableCell>
+          projects.map((project) => (
+            <TableRow key={project._id}>
+              <TableCell className="font-medium">{project.title}</TableCell>
+              <TableCell>
+                <a 
+                  href={project.liveLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-600 hover:underline"
+                >
+                  View Live
+                </a>
+              </TableCell>
               <TableCell>
                 <Image
-                  src={projects.image}
-                  alt={projects.title}
-                  width={24}
-                  height={24}
+                  src={project.image}
+                  alt={project.title}
+                  width={50}
+                  height={30}
                   className="inline-block rounded-sm"
                 />
               </TableCell>
               <TableCell className="text-right space-x-2">
-                {/* <UpdateSkill skill={skill} onUpdate={handleUpdate}>
-                  <Button variant="outline" size="icon" className="hover:bg-blue-100">
-                    <Pencil size={16} className="text-blue-600" />
-                  </Button>
-                </UpdateSkill> */}
-                <Button variant="outline" size="icon" className="hover:bg-red-100">
-                  <Trash2 size={16} className="text-red-600" />
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="hover:bg-blue-100">
+                      <Pencil size={16} className="text-blue-600" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl overflow-y-auto max-h-screen">
+                    <UpdateProjects project={project} onUpdate={handleUpdate} />
+                  </DialogContent>
+                </Dialog>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="icon">
+                      <Trash2 size={16} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-red-500">
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete your project and remove your data from our
+                        servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(project._id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           ))
@@ -96,11 +134,11 @@ export default function ProjectsTable() {
               colSpan={4}
               className="px-4 py-3 text-center text-gray-500"
             >
-              No Skills found.
+              No projects found.
             </TableCell>
           </TableRow>
         )}
       </TableBody>
     </Table>
-  )
+  );
 }
