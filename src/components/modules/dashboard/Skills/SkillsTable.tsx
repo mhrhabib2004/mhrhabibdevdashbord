@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 
 import Image from "next/image";
@@ -13,25 +14,44 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import UpdateSkill from "./UpdateSkill";
+import { ISkill } from "@/type/skill";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
+interface SkillTableProps {
+  skills: ISkill[];
+  onUpdate: (updatedSkill: ISkill) => Promise<{ success: boolean; message: string }>;
+  onDelete: (id: string) => Promise<{ success: boolean; message: string }>;
+}
 
-const skills = [
-  {
-    name: "JavaScript",
-    category: "Technical",
-    image: "/images/skills/javascript.png",
-  },
-  {
-    name: "Teamwork",
-    category: "Soft",
-    image: "/images/skills/teamwork.png",
-  },
-];
+export function SkillTable({ skills, onUpdate, onDelete }: SkillTableProps) {
+  // Update handler passed down to UpdateSkill modal/component
+  const handleUpdate = async (updatedSkill: ISkill) => {
+    // const result = await onUpdate(updatedSkill);
+  try {
+      const result = await onUpdate(updatedSkill);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
+  };
 
-export function SkillTable() {
-  const handleUpdate = (updatedSkill: any) => {
-    // Implement your update logic here
-    console.log("Updated skill:", updatedSkill);
+  // Delete handler when Trash button clicked
+  const handleDelete = async (id: string) => {
+       try {
+      const result = await onDelete(id);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
   };
 
   return (
@@ -46,8 +66,8 @@ export function SkillTable() {
       </TableHeader>
       <TableBody>
         {skills && skills.length > 0 ? (
-          skills.map((skill, index) => (
-            <TableRow key={index}>
+          skills.map((skill) => (
+            <TableRow key={skill._id || skill.name}>
               <TableCell className="font-medium">{skill.name}</TableCell>
               <TableCell>{skill.category}</TableCell>
               <TableCell>
@@ -65,18 +85,41 @@ export function SkillTable() {
                     <Pencil size={16} className="text-blue-600" />
                   </Button>
                 </UpdateSkill>
-                <Button variant="outline" size="icon" className="hover:bg-red-100">
-                  <Trash2 size={16} className="text-red-600" />
-                </Button>
+                                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="icon">
+                      <Trash2 size={16} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-red-500">
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete your project and remove your data from our
+                        servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                         className="hover:bg-red-100"
+                  onClick={() => handleDelete(skill._id!)}
+                        
+                      >
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           ))
         ) : (
           <TableRow>
-            <TableCell
-              colSpan={4}
-              className="px-4 py-3 text-center text-gray-500"
-            >
+            <TableCell colSpan={4} className="px-4 py-3 text-center text-gray-500">
               No Skills found.
             </TableCell>
           </TableRow>
