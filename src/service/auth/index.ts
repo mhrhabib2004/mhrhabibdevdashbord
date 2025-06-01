@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { FieldValues } from "react-hook-form";
@@ -10,11 +11,17 @@ export const loginUser = async (userData: FieldValues) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(userData),
-      credentials: "include", // Cookies sent automatically
+      credentials: "include",
     });
 
-    const result = await res.json();
-    return result;
+    const text = await res.text();
+
+    try {
+      const result = JSON.parse(text);
+      return result;
+    } catch (err) {
+      return { success: false, message: "Invalid or empty JSON response" };
+    }
   } catch (error: any) {
     return { success: false, message: error.message || "Login failed" };
   }
