@@ -1,19 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import React, { useState } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { addSkills } from "@/service/skills";
+import { useRouter } from "next/navigation";
 
 export enum SkillCategory {
   Technical = "Technical",
@@ -27,55 +25,95 @@ export interface ISkill {
 }
 
 export default function AddSkill() {
+  const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+    const router = useRouter();
+
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
     reset,
-  } = useForm<ISkill>();
+    formState: { errors },
+  } = useForm<ISkill>({
+    defaultValues: {
+      category: SkillCategory.Technical,
+    },
+  });
 
-  const onSubmit: SubmitHandler<ISkill> = (data) => {
-    console.log("Skill Submitted:", data);
-    // handle skill post here
-    reset(); // reset form
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+
+    setUploading(true);
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      setValue("image", data.secure_url, { shouldValidate: true });
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onSubmit: SubmitHandler<ISkill> = async (data) => {
+    try {
+      await addSkills(data);
+      toast.success("Skill added successfully!");
+      reset();
+      setOpen(false);
+      router.refresh(); 
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add skill");
+    }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <div className="flex justify-end mr-8">
-          <Button variant={"ghost"}>Add Skill</Button>
-        </div>
+        <Button variant={"outline"}>Add Skill</Button>
       </DialogTrigger>
+
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Skill</DialogTitle>
-          <DialogDescription>
-            Please fill out the details of your skill.
-          </DialogDescription>
+          <DialogDescription>Upload your skill with image.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
-
           {/* Name */}
           <div>
             <Label htmlFor="name">Skill Name</Label>
             <Input
               id="name"
-              className="bg-white mt-2 dark:bg-zinc-800"
               {...register("name", { required: "Name is required" })}
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
 
           {/* Category */}
           <div>
             <Label htmlFor="category">Category</Label>
-            <Select onValueChange={(value) => setValue("category", value as SkillCategory)}>
-              <SelectTrigger className="bg-white mt-2 dark:bg-zinc-800">
+            <Select
+              onValueChange={(value) =>
+                setValue("category", value as SkillCategory, { shouldValidate: true })
+              }
+              defaultValue={SkillCategory.Technical}
+            >
+              <SelectTrigger>
                 <SelectValue placeholder="Select Category" />
               </SelectTrigger>
               <SelectContent>
@@ -83,26 +121,19 @@ export default function AddSkill() {
                 <SelectItem value={SkillCategory.Soft}>Soft</SelectItem>
               </SelectContent>
             </Select>
-            {errors.category && (
-              <p className="text-red-500 text-sm">Category is required</p>
-            )}
           </div>
 
-          {/* Image */}
+          {/* Image Upload */}
           <div>
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              className="bg-white dark:bg-zinc-800"
-              {...register("image", { required: "Image is required" })}
-            />
-            {errors.image && (
-              <p className="text-red-500 text-sm">{errors.image.message}</p>
-            )}
+            <Label htmlFor="image">Upload Image</Label>
+            <Input type="file" onChange={handleImageUpload} />
+            {uploading && <p className="text-blue-500 text-sm">Uploading...</p>}
           </div>
 
           <DialogFooter>
-            <Button type="submit">Add Skill</Button>
+            <Button type="submit" disabled={uploading}>
+              Add Skill
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
