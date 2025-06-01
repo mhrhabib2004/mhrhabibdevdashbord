@@ -60,7 +60,7 @@ export const AddProject = () => {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Add Project</Button>
+      <Button className="cursor-pointer" variant={"ghost"} onClick={() => setOpen(true)}>Add Project</Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-screen overflow-y-auto max-w-2xl">
