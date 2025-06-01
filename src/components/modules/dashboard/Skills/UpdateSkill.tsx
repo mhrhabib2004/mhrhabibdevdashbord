@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,9 +13,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useForm, SubmitHandler } from "react-hook-form";
 import {
   Select,
   SelectContent,
@@ -20,19 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState } from "react";
 import { ReactNode } from "react";
-
-export enum SkillCategory {
-  Technical = "Technical",
-  Soft = "Soft",
-}
-
-export interface ISkill {
-  name: string;
-  category: SkillCategory;
-  image: string;
-}
+import { ISkill, SkillCategory } from "@/type/skill";
 
 interface UpdateSkillProps {
   skill: ISkill;
@@ -43,91 +41,85 @@ interface UpdateSkillProps {
 export default function UpdateSkill({ skill, onUpdate, children }: UpdateSkillProps) {
   const [open, setOpen] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<ISkill>({
+  const form = useForm<ISkill>({
     defaultValues: skill,
   });
 
-  useEffect(() => {
-    if (skill) {
-      reset(skill);
-    }
-  }, [skill, reset, open]); // Added open to dependencies
-
-  const onSubmit: SubmitHandler<ISkill> = (data) => {
+  const onSubmit = (data: ISkill) => {
     onUpdate(data);
     setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Skill</DialogTitle>
           <DialogDescription>Update your skill information.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
-          {/* Name */}
-          <div>
-            <Label htmlFor="name">Skill Name</Label>
-            <Input
-              id="name"
-              className="bg-white dark:bg-zinc-800"
-              {...register("name", { required: "Name is required" })}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+
+            <FormField
+              control={form.control}
+              name="name"
+              rules={{ required: "Skill name is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Skill Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="bg-white dark:bg-zinc-800" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name.message}</p>
-            )}
-          </div>
 
-          {/* Category */}
-          <div>
-            <Label htmlFor="category">Category</Label>
-            <Select
-              defaultValue={skill.category}
-              onValueChange={(value) => {
-                setValue("category", value as SkillCategory);
-              }}
-            >
-              <SelectTrigger className="bg-white dark:bg-zinc-800">
-                <SelectValue placeholder="Select Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={SkillCategory.Technical}>Technical</SelectItem>
-                <SelectItem value={SkillCategory.Soft}>Soft</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.category && (
-              <p className="text-red-500 text-sm">Category is required</p>
-            )}
-          </div>
-
-          {/* Image */}
-          <div>
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              className="bg-white dark:bg-zinc-800"
-              {...register("image", { required: "Image is required" })}
+            <FormField
+              control={form.control}
+              name="category"
+              rules={{ required: "Category is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="bg-white dark:bg-zinc-800">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={SkillCategory.Technical}>Technical</SelectItem>
+                        <SelectItem value={SkillCategory.Soft}>Soft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.image && (
-              <p className="text-red-500 text-sm">{errors.image.message}</p>
-            )}
-          </div>
 
-          <DialogFooter>
-            <Button type="submit">Update Skill</Button>
-          </DialogFooter>
-        </form>
+            <FormField
+              control={form.control}
+              name="image"
+              rules={{ required: "Image URL is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="bg-white dark:bg-zinc-800" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="submit">Update Skill</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
