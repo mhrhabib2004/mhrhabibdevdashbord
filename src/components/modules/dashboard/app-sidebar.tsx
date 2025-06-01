@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search } from "lucide-react"
+import { SquarePen,NotebookPen,BookPlus,HousePlus  } from "lucide-react"
 
 import {
   Sidebar,
@@ -14,24 +14,24 @@ import {
 // Menu items.
 const items = [
   {
+    title: "Admin",
+    url: "/admin",
+    icon: HousePlus ,
+  },
+  {
     title: "Blogs Management",
     url: "/admin/blogs",
-    icon: Home,
+    icon: NotebookPen ,
   },
   {
     title: "Projects Management",
     url: "/admin/projects",
-    icon: Inbox,
+    icon: BookPlus ,
   },
   {
     title: "Skills Management",
     url: "/admin/skills",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
+    icon: SquarePen ,
   }
 ]
 
